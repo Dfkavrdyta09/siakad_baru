@@ -38,6 +38,14 @@ class DashboardController extends Controller
                 'sks' => 21, 'status' => 'Disetujui'],
         ];
 
+        // Statistik kelima dihitung dari data KRS terbaru.
+        $statistik[] = [
+            'judul' => 'Rata-rata SKS per KRS',
+            'jumlah' => round(collect($krsTerbaru)->avg('sks')),
+            'ikon' => 'bi-bar-chart-line-fill',
+            'warna' => 'danger',
+        ];
+
         $statusKrs = [
             ['label' => 'Disetujui', 'persen' => 70, 'warna' => 'success'],
             ['label' => 'Menunggu', 'persen' => 22, 'warna' => 'warning'],

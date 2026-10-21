@@ -14,7 +14,25 @@ class MahasiswaController extends Controller
             'status' => 'Status',
         ];
 
-        $mahasiswa = [
+        $mahasiswa = $this->dataMahasiswa();
+
+        return view('mahasiswa.index', compact('kolom', 'mahasiswa'));
+    }
+
+    public function show(string $nim): View
+    {
+        $mahasiswa = collect($this->dataMahasiswa())->firstWhere('nim', $nim);
+
+        if ($mahasiswa === null) {
+            abort(404);
+        }
+
+        return view('mahasiswa.show', compact('mahasiswa'));
+    }
+
+    private function dataMahasiswa(): array
+    {
+        return [
             ['nim' => '2401001', 'nama' => 'Ahmad Fauzi', 'angkatan' => 2024,
                 'email' => 'ahmad.fauzi@contoh.ac.id', 'status' => 'Aktif'],
             ['nim' => '2401002', 'nama' => 'Siti Rahmawati', 'angkatan' => 2024,
@@ -26,7 +44,5 @@ class MahasiswaController extends Controller
             ['nim' => '2201020', 'nama' => 'Rizky Pratama', 'angkatan' => 2022,
                 'email' => 'rizky.pratama@contoh.ac.id', 'status' => 'Lulus'],
         ];
-
-        return view('mahasiswa.index', compact('kolom', 'mahasiswa'));
     }
 }

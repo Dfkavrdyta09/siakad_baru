@@ -23,7 +23,8 @@
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-body fw-semibold">Daftar Mahasiswa</div>
         <div class="card-body p-0">
-            <x-tabel :kolom="$kolom" :baris="$mahasiswa" />
+            <x-tabel :kolom="$kolom" :baris="$mahasiswa"
+                :tautan="['nim' => 'mahasiswa.show']" />
         </div>
     </div>
 @endsection

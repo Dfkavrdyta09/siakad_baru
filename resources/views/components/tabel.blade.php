@@ -1,4 +1,4 @@
-@props(['kolom' => [], 'baris' => []])
+@props(['kolom' => [], 'baris' => [], 'tautan' => []])
 
 <div class="table-responsive">
     <table class="table table-striped table-hover align-middle mb-0">
@@ -16,7 +16,10 @@
                     <td>{{ $loop->iteration }}</td>
                     @foreach ($kolom as $kunci => $judul)
                         <td>
-                            @if ($kunci === 'status')
+                            @if (isset($tautan[$kunci]))
+                                <a href="{{ route($tautan[$kunci], $item[$kunci]) }}"
+                                    class="text-decoration-none">{{ $item[$kunci] }}</a>
+                            @elseif ($kunci === 'status')
                                 @php
                                     $warna = match ($item[$kunci]) {
                                         'Aktif', 'Disetujui' => 'success',
