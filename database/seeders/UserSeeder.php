@@ -10,26 +10,26 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::updateOrCreate(
-            ['email' => 'dosen@siakad.test'],
-            [
-                'name' => 'Dosen Contoh',
-                'password' => Hash::make('password'),
-                'role' => 'dosen',
-            ]
-        );
+        if (app()->isProduction()) {
+            $this->command?->warn('UserSeeder dilewati di production.');
 
-        User::updateOrCreate(
-            ['email' => 'mahasiswa@siakad.test'],
-            [
-                'name' => 'Mahasiswa Contoh',
-                'password' => Hash::make('password'),
-                'role' => 'mahasiswa',
-            ]
-        );
+            return;
+        }
+
+        $akun = [
+            ['dosen@siakad.test', 'Dosen Uji', 'Dosen@12345', 'dosen'],
+            ['mahasiswa@siakad.test', 'Mahasiswa Uji', 'Mahasiswa@12345', 'mahasiswa'],
+        ];
+
+        foreach ($akun as [$email, $nama, $password, $role]) {
+            User::updateOrCreate(
+                ['email' => $email],
+                [
+                    'name' => $nama,
+                    'password' => Hash::make($password),
+                    'role' => $role,
+                ]
+            );
+        }
     }
 }
-
-
-
-
