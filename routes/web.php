@@ -29,8 +29,6 @@ Route::middleware(['auth', 'no-back'])->group(function () {
         ->name('mahasiswa.index');
     Route::get('/mahasiswa/{nim}', [MahasiswaController::class, 'show'])
         ->name('mahasiswa.show');
-    Route::get('/dosen', [DosenController::class, 'index'])
-        ->name('dosen.index');
     Route::get('/mata-kuliah', [MataKuliahController::class, 'index'])
         ->name('matakuliah.index');
     Route::get('/krs', [KrsController::class, 'index'])
@@ -38,6 +36,21 @@ Route::middleware(['auth', 'no-back'])->group(function () {
 
     // Dari Jobsheet 07: menampilkan versi PHP/MySQL dan nama database, jadi dilindungi
     Route::get('/beranda', [BerandaController::class, 'index'])->name('beranda');
+
+    // Data Dosen (Jobsheet 11)
+
+    // 1) Endpoint JSON DataTables: HARUS di atas route yang memuat {dosen}
+    Route::get('/dosen/data', [DosenController::class, 'data'])->name('dosen.data');
+
+    // 2) Tambah, ubah, hapus: khusus admin (role berjalan SETELAH auth)
+    Route::middleware('role:admin')->group(function () {
+        Route::resource('dosen', DosenController::class)
+            ->except(['index', 'show']);
+    });
+
+    // 3) Daftar dan detail: semua pengguna yang sudah login
+    Route::resource('dosen', DosenController::class)
+        ->only(['index', 'show']);
 
     // Hanya admin: middleware role berjalan SETELAH auth karena berada di dalam grup auth
     Route::get('/pengguna', [PenggunaController::class, 'index'])
