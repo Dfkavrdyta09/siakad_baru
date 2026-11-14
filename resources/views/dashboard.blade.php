@@ -4,7 +4,7 @@
 
 @section('content')
     <x-page-header judul="Dashboard"
-        deskripsi="Ringkasan data akademik (data sementara)." />
+        deskripsi="Ringkasan data akademik." />
 
     <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-5 g-3 mb-4">
         @foreach ($statistik as $item)

@@ -2,22 +2,38 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Dosen;
+use App\Models\Krs;
+use App\Models\Mahasiswa;
+use App\Models\MataKuliah;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
     public function index(): View
     {
-        // Data sementara. Akan diambil query Eloquent pada jobsheet lanjutan.
+        $totalMahasiswa = Mahasiswa::count();
+        $totalDosen = Dosen::count();
+        $totalMataKuliah = MataKuliah::count();
+        $totalKrs = Krs::count();
+        $krsAktif = Krs::whereIn('status', ['diajukan', 'disetujui'])->count();
+
+        $rataSks = $totalKrs > 0
+            ? (int) round(Krs::with('mataKuliah')->get()
+                ->avg(fn (Krs $krs) => $krs->mataKuliah->sum('sks')))
+            : 0;
+
         $statistik = [
-            ['judul' => 'Mahasiswa', 'jumlah' => 1250,
+            ['judul' => 'Mahasiswa', 'jumlah' => $totalMahasiswa,
                 'ikon' => 'bi-mortarboard-fill', 'warna' => 'primary'],
-            ['judul' => 'Dosen', 'jumlah' => 68,
+            ['judul' => 'Dosen', 'jumlah' => $totalDosen,
                 'ikon' => 'bi-person-badge-fill', 'warna' => 'success'],
-            ['judul' => 'Mata Kuliah', 'jumlah' => 94,
+            ['judul' => 'Mata Kuliah', 'jumlah' => $totalMataKuliah,
                 'ikon' => 'bi-book-fill', 'warna' => 'warning'],
-            ['judul' => 'KRS Aktif', 'jumlah' => 842,
+            ['judul' => 'KRS Aktif', 'jumlah' => $krsAktif,
                 'ikon' => 'bi-journal-check', 'warna' => 'info'],
+            ['judul' => 'Rata-rata SKS per KRS', 'jumlah' => $rataSks,
+                'ikon' => 'bi-bar-chart-line-fill', 'warna' => 'danger'],
         ];
 
         $kolomKrs = [
@@ -25,32 +41,39 @@ class DashboardController extends Controller
             'sks' => 'SKS', 'status' => 'Status',
         ];
 
-        $krsTerbaru = [
-            ['nim' => '2401001', 'nama' => 'Ahmad Fauzi',
-                'sks' => 22, 'status' => 'Disetujui'],
-            ['nim' => '2401002', 'nama' => 'Siti Rahmawati',
-                'sks' => 20, 'status' => 'Disetujui'],
-            ['nim' => '2301005', 'nama' => 'Budi Santoso',
-                'sks' => 24, 'status' => 'Menunggu'],
-            ['nim' => '2301012', 'nama' => 'Dewi Lestari',
-                'sks' => 18, 'status' => 'Menunggu'],
-            ['nim' => '2201020', 'nama' => 'Rizky Pratama',
-                'sks' => 21, 'status' => 'Disetujui'],
+        $krsTerbaru = Krs::with('mahasiswa', 'mataKuliah')
+            ->latest()
+            ->limit(5)
+            ->get()
+            ->map(fn (Krs $krs) => [
+                'nim' => $krs->mahasiswa?->nim ?? '-',
+                'nama' => $krs->mahasiswa?->nama ?? '-',
+                'sks' => $krs->mataKuliah->sum('sks'),
+                'status' => ucfirst($krs->status),
+            ])
+            ->all();
+
+        $jumlahStatus = Krs::query()
+            ->selectRaw('status, count(*) as jumlah')
+            ->groupBy('status')
+            ->pluck('jumlah', 'status');
+
+        $konfigurasiStatus = [
+            'draft' => ['label' => 'Draft', 'warna' => 'warning'],
+            'diajukan' => ['label' => 'Diajukan', 'warna' => 'info'],
+            'disetujui' => ['label' => 'Disetujui', 'warna' => 'success'],
+            'ditolak' => ['label' => 'Ditolak', 'warna' => 'danger'],
         ];
 
-        // Statistik kelima dihitung dari data KRS terbaru.
-        $statistik[] = [
-            'judul' => 'Rata-rata SKS per KRS',
-            'jumlah' => round(collect($krsTerbaru)->avg('sks')),
-            'ikon' => 'bi-bar-chart-line-fill',
-            'warna' => 'danger',
-        ];
-
-        $statusKrs = [
-            ['label' => 'Disetujui', 'persen' => 70, 'warna' => 'success'],
-            ['label' => 'Menunggu', 'persen' => 22, 'warna' => 'warning'],
-            ['label' => 'Ditolak', 'persen' => 8, 'warna' => 'danger'],
-        ];
+        $statusKrs = [];
+        foreach ($konfigurasiStatus as $status => $info) {
+            $jumlah = (int) ($jumlahStatus[$status] ?? 0);
+            $statusKrs[] = [
+                'label' => $info['label'],
+                'persen' => $totalKrs > 0 ? (int) round($jumlah / $totalKrs * 100) : 0,
+                'warna' => $info['warna'],
+            ];
+        }
 
         return view('dashboard', compact(
             'statistik', 'kolomKrs', 'krsTerbaru', 'statusKrs'
